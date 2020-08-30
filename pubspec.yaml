@@ -1,0 +1,26 @@
+name: sudoku
+description: A simple sudoku game using Flutter and Bloc pattern.
+
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.7.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  rxdart: ^0.24.1
+  equatable: ^1.2.3
+  cupertino_icons: ^0.1.3
+  path_provider: ^1.6.11
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  benchmark_harness: any
+
+flutter:
+  uses-material-design: true
