@@ -53,14 +53,6 @@ class _SelectionPageState extends State<SelectionPage> {
               ),
             ),
             SizedBox(height: 48),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _createDifficultyRadio("EASY", 48),
-                _createDifficultyRadio("MEDIUM", 32),
-                _createDifficultyRadio("HARD", 24),
-              ],
-            ),
             FutureBuilder<bool>(
               future: io.isSaved(),
               builder: (context, snapshot) {
@@ -83,7 +75,7 @@ class _SelectionPageState extends State<SelectionPage> {
                               ),
                               onPressed: () {
                                 Navigator.of(context).pop();
-                                _showDifficultyDialog();
+                                _showDifficultyDialog(context);
                               }),
                           FlatButton(
                               child: Text(
@@ -98,13 +90,13 @@ class _SelectionPageState extends State<SelectionPage> {
                       );
                     else {
                       Navigator.of(context).pop();
-                      _showDifficultyDialog();
+                      _showDifficultyDialog(context);
                     }
                   }),
                   if (isSaved)
                     _buildButton(context, "Continute", () async {
                       final snapshot = await io.load();
-                      _navigateToNewGame(snapshot);
+                      _navigateToNewGame(context, snapshot);
                     })
                 ]);
               },
@@ -116,19 +108,8 @@ class _SelectionPageState extends State<SelectionPage> {
     );
   }
 
-  Widget _createDifficultyRadio(String text, int difficulty) {
-    return Column(
-      children: [
-        Text(text),
-        Radio(
-            value: 32,
-            groupValue: null,
-            onChanged: (value) => setState(() => difficulty = value)),
-      ],
-    );
-  }
-
-  void _navigateToNewGame(SudokuSnapshot snapshot, {bool pop = false}) {
+  void _navigateToNewGame(BuildContext context, SudokuSnapshot snapshot,
+      {bool pop = false}) {
     final navigator = Navigator.of(context);
 
     if (pop) navigator.pop();
@@ -157,7 +138,7 @@ class _SelectionPageState extends State<SelectionPage> {
     );
   }
 
-  Future<void> _showDifficultyDialog() {
+  Future<void> _showDifficultyDialog(BuildContext context) {
     return showDialog<void>(
       context: context,
       barrierDismissible: true,
@@ -181,21 +162,21 @@ class _SelectionPageState extends State<SelectionPage> {
                   color: Colors.green,
                   child: Text("Easy"),
                   onPressed: () => _navigateToNewGame(
-                      SudokuSnapshot(board: generateBoard(48)),
+                      context, SudokuSnapshot(board: generateBoard(48)),
                       pop: true),
                 ),
                 RaisedButton(
                   color: Colors.amber,
                   child: Text("Medium"),
                   onPressed: () => _navigateToNewGame(
-                      SudokuSnapshot(board: generateBoard(32)),
+                      context, SudokuSnapshot(board: generateBoard(32)),
                       pop: true),
                 ),
                 RaisedButton(
                   color: Colors.red,
                   child: Text("Hard"),
                   onPressed: () => _navigateToNewGame(
-                      SudokuSnapshot(board: generateBoard(24)),
+                      context, SudokuSnapshot(board: generateBoard(24)),
                       pop: true),
                 ),
               ],

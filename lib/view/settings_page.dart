@@ -27,7 +27,10 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             RaisedButton.icon(
               padding: EdgeInsets.symmetric(vertical: 8, horizontal: 24),
-              onPressed: () => widget.sudokuBloc.reset(),
+              onPressed: () {
+                widget.sudokuBloc.reset();
+                Navigator.of(context).pop();
+              },
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(50),
               ),
