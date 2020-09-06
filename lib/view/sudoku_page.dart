@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:sudoku/model/cell.dart';
-import 'package:sudoku/model/sudoku_io.dart';
 import 'package:sudoku/view/cell_widget.dart';
 import 'package:sudoku/model/sudoku_bloc.dart';
 import 'package:sudoku/model/sudoku_snapshot.dart';
 import 'package:sudoku/view/selection_page.dart';
-import 'package:sudoku/view/settings_page.dart';
+import 'package:sudoku/view/sudoku_dialog.dart';
 import 'package:sudoku/view/sudoku_keyboard.dart';
 
 final Color backgroundColor = Color.fromARGB(255, 26, 27, 67);
@@ -43,28 +42,32 @@ class _SudokuPageState extends State<SudokuPage> {
     bloc.dispose();
   }
 
+  double _determineBoardWidth(Size screenSize) {
+    return screenSize.width < screenSize.height
+        ? screenSize.width.clamp(0, screenSize.height * 0.7)
+        : screenSize.height * 0.7;
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final tableSize = size.width < size.height ? size.width : size.height;
+    final boardSize = _determineBoardWidth(size);
 
-    final cellSize = tableSize / 9;
+    final cellSize = boardSize / 9;
 
     return StreamBuilder<GameState>(
         stream: bloc.gameState,
         builder: (context, snapshot) {
           if (snapshot.hasData && snapshot.data is GameEnded) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              _showConfirmationDialog(context, snapshot.data);
+              _showGameFinishedDialog(context, snapshot.data);
             });
           }
 
           return Scaffold(
             appBar: AppBar(
               brightness: Theme.of(context).brightness,
-              shadowColor: Colors.transparent,
-              backgroundColor: backgroundColor,
-              automaticallyImplyLeading: true,
+              backgroundColor: darkerTileColor,
               title: StreamBuilder<Duration>(
                   stream: bloc.currentTime,
                   builder: (context, snapshot) => snapshot.hasData
@@ -75,27 +78,17 @@ class _SudokuPageState extends State<SudokuPage> {
                               .copyWith(fontWeight: FontWeight.w400))
                       : Container()),
               centerTitle: true,
-              actions: [
-                IconButton(
-                  icon: Icon(Icons.settings),
-                  onPressed: () => Navigator.of(context).push(
-                    PageRouteBuilder(
-                      opaque: false,
-                      pageBuilder: (_, __, ___) => SettingsPage(
-                        sudokuBloc: bloc,
-                      ),
-                    ),
-                  ),
-                )
-              ],
+              leading: BackButton(
+                  onPressed: () => Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (_) => SelectionPage()))),
             ),
             backgroundColor: backgroundColor,
             body: Column(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Container(
-                  width: tableSize,
-                  height: tableSize,
+                  width: boardSize,
+                  height: boardSize,
                   child: Stack(
                     children: [
                       Column(
@@ -115,7 +108,11 @@ class _SudokuPageState extends State<SudokuPage> {
                                     stream: bloc.cell(Vector2D(x, y)),
                                     onTap: (cell) {
                                       if (!cell.isSolid && selectedNumber != null) {
-                                        bloc.updateCell(Vector2D(x, y), selectedNumber);
+                                        if (cell.value == selectedNumber) {
+                                          bloc.updateCell(Vector2D(x, y), 0);
+                                        } else {
+                                          bloc.updateCell(Vector2D(x, y), selectedNumber);
+                                        }
                                       }
                                     },
                                   )
@@ -131,7 +128,25 @@ class _SudokuPageState extends State<SudokuPage> {
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [Container()],
+                  children: [
+                    IconButton(
+                      onPressed: null, // TODO: implement undo and redo
+                      icon: Icon(Icons.undo),
+                    ),
+                    IconButton(
+                      onPressed: null,
+                      icon: Icon(Icons.redo),
+                    ),
+                    IconButton(
+                      onPressed: () => showDialog<void>(
+                        context: context,
+                        barrierDismissible: true,
+                        builder: (context) => SudokuDialog.confirmationDialog(context,
+                            onConfirm: () => bloc.reset()),
+                      ),
+                      icon: Icon(Icons.refresh),
+                    ),
+                  ],
                 )
               ],
             ),
@@ -139,36 +154,22 @@ class _SudokuPageState extends State<SudokuPage> {
         });
   }
 
-  Future<void> _showConfirmationDialog(BuildContext context, GameEnded gameEnded) async {
+  Future<void> _showGameFinishedDialog(BuildContext context, GameEnded gameEnded) async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: backgroundColor,
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text(
-                    "Congratulations you finished in ${durationToString(gameEnded.gameTime)}"),
-              ],
-            ),
-          ),
-          actions: [
-            RaisedButton(
-              onPressed: () {
-                final navigator = Navigator.of(context);
+      builder: (BuildContext context) => SudokuDialog.showDialog(context, actions: [
+        RaisedButton(
+          onPressed: () {
+            final navigator = Navigator.of(context);
 
-                navigator.pop();
-                navigator.pop();
-              },
-              color: darkerTileColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Text("Continue"),
-            ),
-          ],
-        );
-      },
+            navigator..pop()..pop();
+          },
+          color: darkerTileColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Text("Continue"),
+        ),
+      ]),
     );
   }
 

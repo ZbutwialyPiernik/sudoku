@@ -81,7 +81,9 @@ class SudokuBloc {
   }
 
   void dispose() {
-    io.save(takeSnapshot());
+    if (!(_gameStateSubject.value is GameEnded)) {
+      io.save(takeSnapshot());
+    }
 
     _stopwatch.stop();
     _stopwatch.reset();

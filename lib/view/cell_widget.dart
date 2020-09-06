@@ -53,7 +53,7 @@ class _CellWidgetState extends State<CellWidget> {
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 32,
-                fontWeight: cell.isSolid ? FontWeight.w500 : FontWeight.w300,
+                fontWeight: cell.isSolid ? FontWeight.bold : FontWeight.normal,
               ), //cell.isSolid ? FontWeight.w700 : FontWeight.w300),
             ),
           ),

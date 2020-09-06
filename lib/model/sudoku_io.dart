@@ -6,14 +6,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sudoku/model/sudoku_snapshot.dart';
 import 'package:universal_platform/universal_platform.dart';
 
-final SudokuIO io = UniversalPlatform.isAndroid ||
-        UniversalPlatform.isIOS ||
-        UniversalPlatform.isLinux ||
-        UniversalPlatform.isMacOS
-    ? MobileSudokuIO()
-    : WebSudokuIO();
+final _SudokuIO io = UniversalPlatform.isWeb ? _WebSudokuIO() : _MobileSudokuIO();
 
-abstract class SudokuIO {
+abstract class _SudokuIO {
   Future<void> deleteIfExists();
 
   Future<bool> isSaved();
@@ -25,9 +20,9 @@ abstract class SudokuIO {
 
 const filename = "save.json";
 
-class WebSudokuIO extends SudokuIO {
-  Future<void> deleteIfExists() {
-    dartHTML.window.localStorage[filename] = null;
+class _WebSudokuIO extends _SudokuIO {
+  Future<void> deleteIfExists() async {
+    dartHTML.window.localStorage.remove(filename);
   }
 
   Future<bool> isSaved() async {
@@ -38,13 +33,13 @@ class WebSudokuIO extends SudokuIO {
     return SudokuSnapshot.fromJson(jsonDecode(dartHTML.window.localStorage[filename]));
   }
 
-  Future<void> save(SudokuSnapshot snapshot) {
+  Future<void> save(SudokuSnapshot snapshot) async {
     dartHTML.window.localStorage[filename] = jsonEncode(snapshot.toJson());
   }
 }
 
-class MobileSudokuIO extends SudokuIO {
-  MobileSudokuIO();
+class _MobileSudokuIO extends _SudokuIO {
+  _MobileSudokuIO();
 
   @override
   Future<SudokuSnapshot> load() async {

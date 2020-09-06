@@ -1,19 +1,14 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sudoku/model/sudoku_io.dart';
 import 'package:sudoku/model/sudoku_generator.dart';
 import 'package:sudoku/model/sudoku_snapshot.dart';
+import 'package:sudoku/view/sudoku_dialog.dart';
 
 import 'package:sudoku/view/sudoku_page.dart';
 
-class SelectionPage extends StatefulWidget {
-  @override
-  _SelectionPageState createState() => _SelectionPageState();
-}
-
-class _SelectionPageState extends State<SelectionPage> {
-  int difficulty;
-
+class SelectionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -59,45 +54,26 @@ class _SelectionPageState extends State<SelectionPage> {
                 final isSaved = snapshot.data ?? false;
 
                 return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  _buildButton(context, "New Game", () {
-                    if (isSaved)
-                      _showConfirmationDialog(
-                        context,
-                        "Are you sure you want to lose your progress and start the game all over again?",
-                        [
-                          FlatButton(
-                              child: Text(
-                                'Yes',
-                                style: Theme.of(context).textTheme.button.copyWith(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 18),
-                              ),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                _showDifficultyDialog(context);
-                              }),
-                          FlatButton(
-                              child: Text(
-                                'No',
-                                style: Theme.of(context).textTheme.button.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 18),
-                              ),
-                              onPressed: () => Navigator.of(context).pop())
-                        ],
-                      );
-                    else {
-                      Navigator.of(context).pop();
-                      _showDifficultyDialog(context);
-                    }
-                  }),
+                  _buildButton(context,
+                      text: "New Game",
+                      backgroundColor: darkerTileColor,
+                      onClick: () => isSaved
+                          ? showDialog<void>(
+                              context: context,
+                              builder: (context) => SudokuDialog.confirmationDialog(
+                                  context,
+                                  text:
+                                      "Are you sure you want to lose your progress and start the game all over again?",
+                                  onConfirm: () => _showDifficultyDialog(context)))
+                          : _showDifficultyDialog(context)),
+                  SizedBox(height: 16),
                   if (isSaved)
-                    _buildButton(context, "Continute", () async {
-                      final snapshot = await io.load();
-                      _navigateToNewGame(context, snapshot);
-                    })
+                    _buildButton(context,
+                        text: "Continute",
+                        backgroundColor: lighterTileColor,
+                        onClick: () => io
+                            .load()
+                            .then((snapshot) => _navigateToNewGame(context, snapshot)))
                 ]);
               },
             ),
@@ -113,25 +89,27 @@ class _SelectionPageState extends State<SelectionPage> {
     final navigator = Navigator.of(context);
 
     if (pop) navigator.pop();
-    navigator
-        .push(MaterialPageRoute(
-          builder: (_) => SudokuPage(snapshot: snapshot),
-        ))
-        .then((value) => setState(() {}));
-    // Page needs to get refreshed, because game save will be either
-    // deleted (after finished game) or created new one after leaving page with unfinished game
+    navigator.push(MaterialPageRoute(
+      builder: (_) => SudokuPage(snapshot: snapshot),
+    ));
   }
 
-  Widget _buildButton(BuildContext context, String text, Function onClick) {
+  Widget _buildButton(BuildContext context,
+      {String text, Color backgroundColor, Function onClick}) {
     return SizedBox(
-      width: 240, // specific value
-      child: OutlineButton(
+      width: 240,
+      height: 40,
+      child: RaisedButton(
+        color: backgroundColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18.0)),
         onPressed: onClick,
         child: Center(
           child: Text(
             text,
-            style: Theme.of(context).textTheme.button.copyWith(fontSize: 20),
+            style: Theme.of(context)
+                .textTheme
+                .button
+                .copyWith(fontSize: 20, fontWeight: FontWeight.w600),
           ),
         ),
       ),
@@ -141,8 +119,7 @@ class _SelectionPageState extends State<SelectionPage> {
   Future<void> _showDifficultyDialog(BuildContext context) {
     return showDialog<void>(
       context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AlertDialog(
           backgroundColor: backgroundColor,
           title: Center(
@@ -162,53 +139,35 @@ class _SelectionPageState extends State<SelectionPage> {
                   color: Colors.green,
                   child: Text("Easy"),
                   onPressed: () => _navigateToNewGame(
-                      context, SudokuSnapshot(board: generateBoard(48)),
+                      context, SudokuSnapshot(board: generateBoard(40)),
                       pop: true),
                 ),
                 RaisedButton(
                   color: Colors.amber,
                   child: Text("Medium"),
                   onPressed: () => _navigateToNewGame(
-                      context, SudokuSnapshot(board: generateBoard(32)),
+                      context, SudokuSnapshot(board: generateBoard(34)),
                       pop: true),
                 ),
                 RaisedButton(
                   color: Colors.red,
                   child: Text("Hard"),
                   onPressed: () => _navigateToNewGame(
-                      context, SudokuSnapshot(board: generateBoard(24)),
+                      context, SudokuSnapshot(board: generateBoard(26)),
                       pop: true),
                 ),
+                // Button for debuging end of the game, generating board with only 1 field needed
+                if (!kReleaseMode)
+                  RaisedButton(
+                    color: Colors.black,
+                    child: Text("Debug"),
+                    onPressed: () => _navigateToNewGame(
+                        context, SudokuSnapshot(board: generateBoard(80)),
+                        pop: true),
+                  ),
               ],
             ),
           ),
-        );
-      },
-    );
-  }
-
-  Future<void> _showConfirmationDialog(
-      BuildContext context, String body, List<Widget> actions) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: backgroundColor,
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text(
-                  body,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyText2
-                      .copyWith(fontWeight: FontWeight.w700, fontSize: 18),
-                ),
-              ],
-            ),
-          ),
-          actions: actions,
         );
       },
     );
