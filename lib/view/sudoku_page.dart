@@ -158,18 +158,21 @@ class _SudokuPageState extends State<SudokuPage> {
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) => SudokuDialog.showDialog(context, actions: [
-        RaisedButton(
-          onPressed: () {
-            final navigator = Navigator.of(context);
+      builder: (BuildContext context) => SudokuDialog.showDialog(context,
+          text:
+              "Congratulations, you finished game in ${durationToString(gameEnded.gameTime)}",
+          actions: [
+            RaisedButton(
+              onPressed: () {
+                final navigator = Navigator.of(context);
 
-            navigator..pop()..pop();
-          },
-          color: darkerTileColor,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Text("Continue"),
-        ),
-      ]),
+                navigator..pop()..pop();
+              },
+              color: darkerTileColor,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Text("Continue"),
+            ),
+          ]),
     );
   }
 

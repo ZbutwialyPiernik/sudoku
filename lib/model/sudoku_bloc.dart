@@ -1,6 +1,6 @@
 import 'package:rxdart/rxdart.dart';
 import 'package:sudoku/model/cell.dart';
-import 'package:sudoku/model/sudoku_io.dart';
+import 'package:sudoku/model/io/sudoku_io.dart';
 import 'package:sudoku/model/sudoku_snapshot.dart';
 import 'package:sudoku/model/sudoku_validator.dart';
 

@@ -11,6 +11,7 @@ Game is tested for android and web, but should work aswell on IOS, i've tried to
 - I18n
 - Tests
 - Tips
+- Make keyboard work on web (Works currently only on android, on IOS should too but i didn't test it)
 
 ## Screenshots
 

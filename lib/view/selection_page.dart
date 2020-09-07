@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:sudoku/model/sudoku_io.dart';
+import 'package:sudoku/model/io/sudoku_io.dart';
 import 'package:sudoku/model/sudoku_generator.dart';
 import 'package:sudoku/model/sudoku_snapshot.dart';
 import 'package:sudoku/view/sudoku_dialog.dart';
