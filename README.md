@@ -7,7 +7,7 @@ Game is tested for android and web, but should work aswell on IOS, i've tried to
 
 - Tips ✅
 - Undo/Red
-- Runtime changable themes using Provider
+- Runtime changeable themes using Provider
 - Animations
 - I18n
 - Tests
