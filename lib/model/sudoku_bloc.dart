@@ -66,18 +66,40 @@ class SudokuBloc {
 
   Stream<GameState> get gameState => _gameStateSubject.stream;
 
-  void updateCell(Vector2D position, int value) {
+  void updateCellWithValue(Vector2D position, int value) {
     final cellSubject = _board[position.y][position.x];
 
-    assert(!cellSubject.value.isSolid);
+    if (cellSubject.value.value == value) {
+      value = 0;
+    }
 
     cellSubject.add(Cell.normal(position, value));
+
+    _removeTipsInRow(position, value);
+    _removeTipsInColumn(position, value);
 
     if (isValid(unwrapCells(_board), false)) {
       io.deleteIfExists();
 
       _gameStateSubject.add(GameEnded(_stopwatch.elapsed + _timeElapsed));
     }
+  }
+
+  void updateCellWithTip(Vector2D position, int value) {
+    final cellSubject = _board[position.y][position.x];
+    final cell = cellSubject.value;
+
+    cellSubject.add(_updateCellWithTip(cell, value));
+  }
+
+  Cell _updateCellWithTip(Cell cell, int value) {
+    final List<int> newTips = cell.tips == null ? List() : List.from(cell.tips);
+
+    newTips.contains(value) ? newTips.remove(value) : newTips.add(value);
+
+    return newTips.isEmpty
+        ? Cell.empty(cell.position)
+        : Cell.withTips(cell.position, newTips);
   }
 
   void dispose() {
@@ -89,5 +111,27 @@ class SudokuBloc {
     _stopwatch.reset();
     _gameStateSubject.close();
     _board.forEach((row) => row.forEach((cell) => cell.close()));
+  }
+
+  _removeTipsInRow(Vector2D position, int valueToRemove) {
+    for (int i = 0; i < size; i++) {
+      final cellSubject = _board[position.y][i];
+      final cell = cellSubject.value;
+
+      if (position.x != i && cell.hasTips && cell.tips.contains(valueToRemove)) {
+        cellSubject.add(_updateCellWithTip(cell, valueToRemove));
+      }
+    }
+  }
+
+  _removeTipsInColumn(Vector2D position, int valueToRemove) {
+    for (int i = 0; i < size; i++) {
+      final cellSubject = _board[i][position.x];
+      final cell = cellSubject.value;
+
+      if (position.y != i && cell.hasTips && cell.tips.contains(valueToRemove)) {
+        cellSubject.add(_updateCellWithTip(cell, valueToRemove));
+      }
+    }
   }
 }

@@ -24,6 +24,7 @@ class SudokuPage extends StatefulWidget {
 }
 
 class _SudokuPageState extends State<SudokuPage> {
+  bool tipMode = false;
   int selectedNumber;
   SudokuBloc bloc = SudokuBloc();
 
@@ -103,15 +104,17 @@ class _SudokuPageState extends State<SudokuPage> {
                                     padding: EdgeInsets.only(
                                         left: 2, right: 2, top: 2, bottom: 2),
                                     isHighlighted: (cell) =>
-                                        !cell.isEmpty && cell.value == selectedNumber,
+                                        (!cell.isEmpty && cell.value == selectedNumber) || (cell.hasTips && cell.tips.contains(selectedNumber)),
                                     size: cellSize,
                                     stream: bloc.cell(Vector2D(x, y)),
                                     onTap: (cell) {
-                                      if (!cell.isSolid && selectedNumber != null) {
-                                        if (cell.value == selectedNumber) {
-                                          bloc.updateCell(Vector2D(x, y), 0);
+                                      if (selectedNumber != null && !cell.isSolid) {
+                                        if (tipMode) {
+                                          bloc.updateCellWithTip(
+                                              Vector2D(x, y), selectedNumber);
                                         } else {
-                                          bloc.updateCell(Vector2D(x, y), selectedNumber);
+                                          bloc.updateCellWithValue(
+                                              Vector2D(x, y), selectedNumber);
                                         }
                                       }
                                     },
@@ -130,18 +133,32 @@ class _SudokuPageState extends State<SudokuPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     IconButton(
-                      onPressed: null, // TODO: implement undo and redo
+                      padding: EdgeInsets.symmetric(horizontal: 32),
+                      icon: Icon(
+                        Icons.edit,
+                        color: tipMode
+                            ? Theme.of(context).highlightColor
+                            : Theme.of(context).disabledColor,
+                      ),
+                      onPressed: () => setState(() => tipMode = !tipMode),
+                    ),
+                    IconButton(
+                      padding: EdgeInsets.symmetric(horizontal: 32),
+                      onPressed: null,
                       icon: Icon(Icons.undo),
                     ),
                     IconButton(
+                      padding: EdgeInsets.symmetric(horizontal: 32),
                       onPressed: null,
                       icon: Icon(Icons.redo),
                     ),
                     IconButton(
+                      padding: EdgeInsets.symmetric(horizontal: 32),
                       onPressed: () => showDialog<void>(
                         context: context,
                         barrierDismissible: true,
                         builder: (context) => SudokuDialog.confirmationDialog(context,
+                            text: "Are you sure that you want to restart the game?",
                             onConfirm: () => bloc.reset()),
                       ),
                       icon: Icon(Icons.refresh),

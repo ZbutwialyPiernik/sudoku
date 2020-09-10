@@ -27,18 +27,24 @@ class Cell extends Equatable {
   final Vector2D position;
   final int value;
   final bool isSolid;
-
-  bool get isEmpty => value == 0;
+  final List<int> tips;
 
   Cell._({
     @required this.position,
     @required this.value,
     this.isSolid = false,
+    List<int> tips,
   })  : assert(position != null),
-        assert(value != null);
+        assert(value != null),
+        assert(tips == null || (tips.isNotEmpty && value == 0)),
+        tips = tips != null ? List.unmodifiable(tips..sort()) : null;
+
+  bool get isEmpty => value == 0;
+
+  bool get hasTips => tips != null && tips.isNotEmpty;
 
   @override
-  List<Object> get props => [position, value, isSolid];
+  List<Object> get props => [position, value, isSolid, tips];
 
   @override
   bool get stringify => true;
@@ -48,6 +54,7 @@ class Cell extends Equatable {
       position: Vector2D.fromJson(json['position']),
       value: json['value'],
       isSolid: json['isSolid'],
+      tips: json['tips'] as List<int>,
     );
   }
 
@@ -55,6 +62,7 @@ class Cell extends Equatable {
         'position': position.toJson(),
         'value': value,
         'isSolid': isSolid,
+        'tips': tips,
       };
 
   static Cell empty(Vector2D position) => Cell._(position: position, value: 0);
@@ -64,4 +72,7 @@ class Cell extends Equatable {
 
   static Cell normal(Vector2D position, int value) =>
       Cell._(position: position, value: value);
+
+  static Cell withTips(Vector2D position, List<int> tips) =>
+      Cell._(position: position, value: 0, tips: tips);
 }

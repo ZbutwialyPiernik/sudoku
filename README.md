@@ -5,13 +5,13 @@ Game is tested for android and web, but should work aswell on IOS, i've tried to
 
 ## TODO
 
+- Tips ✅
 - Undo/Red
 - Runtime changable themes using Provider
 - Animations
 - I18n
 - Tests
-- Tips
-- Make keyboard work on web (Works currently only on android, on IOS should too but i didn't test it)
+- Make keyboard work on web (works currently only on Android, on IOS should too but I didn't test it)
 
 ## Screenshots
 

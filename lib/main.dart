@@ -12,6 +12,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Sudoku',
       theme: ThemeData(
+        fontFamily: 'Roboto',
         brightness: Brightness.dark,
         primaryColor: Color.fromARGB(255, 66, 67, 146),
         scaffoldBackgroundColor: Color.fromARGB(255, 27, 27, 27),

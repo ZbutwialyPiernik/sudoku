@@ -48,17 +48,39 @@ class _CellWidgetState extends State<CellWidget> {
               Tile3dStyle(topColor: backgroundColor, backColor: darken(backgroundColor)),
           onPressed: cell.isSolid ? null : () => widget.onTap(cell),
           child: Center(
-            child: Text(
-              cell.isEmpty ? "" : cell.value.toString(),
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: cell.isSolid ? FontWeight.bold : FontWeight.normal,
-              ), //cell.isSolid ? FontWeight.w700 : FontWeight.w300),
-            ),
+            child: !cell.hasTips
+                ? Text(cell.isEmpty ? "" : cell.value.toString(),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: cell.isSolid ? FontWeight.bold : FontWeight.normal,
+                    ))
+                : _buildTips(context, cell.tips),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildTips(BuildContext context, List<int> tips) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (int y = 0; y < (tips.length - 1) ~/ 3 + 1; y++)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              for (int x = 0; x < (tips.length - y * 3).clamp(0, 3); x++)
+                Text(
+                  tips[y * 3 + x].toString(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                  ),
+                )
+            ],
+          )
+      ],
     );
   }
 
