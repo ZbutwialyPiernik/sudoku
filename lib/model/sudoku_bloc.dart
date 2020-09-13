@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:rxdart/rxdart.dart';
 import 'package:sudoku/model/cell.dart';
 import 'package:sudoku/model/io/sudoku_io.dart';
@@ -8,6 +10,8 @@ abstract class GameState {}
 
 class GameRunning extends GameState {}
 
+class GamePaused extends GameState {}
+
 class GameEnded extends GameState {
   final Duration gameTime;
 
@@ -15,14 +19,29 @@ class GameEnded extends GameState {
 }
 
 class SudokuBloc {
-  static const int size = 9;
+  static const int boardSize = 9;
 
   final Stopwatch _stopwatch = Stopwatch();
   final BehaviorSubject<GameState> _gameStateSubject =
       BehaviorSubject.seeded(GameRunning());
+  final BehaviorSubject<bool> _undoSubject = BehaviorSubject.seeded(false);
+
+  final Queue<List<List<Cell>>> _previousStates = Queue<List<List<Cell>>>();
 
   Duration _timeElapsed;
   List<List<BehaviorSubject<Cell>>> _board;
+
+  Stream<Duration> get currentTime => Stream<Duration>.periodic(
+      Duration(milliseconds: 500),
+      (index) => GameState is GameRunning ? _timeElapsed + _stopwatch.elapsed : null);
+
+  Stream<Cell> cell(Vector2D position) => _board[position.y][position.x].stream;
+
+  Stream<GameState> get gameState => _gameStateSubject.stream;
+
+  Stream<bool> get isAbleToUndo => _undoSubject.stream;
+
+  bool get isLoaded => _board != null;
 
   void load(SudokuSnapshot snapshot) {
     _board = wrapCells(snapshot.board);
@@ -37,8 +56,52 @@ class SudokuBloc {
     _stopwatch.stop();
   }
 
-  bool isLoaded() {
-    return _board != null;
+  void updateCellWithValue(Vector2D position, int value) {
+    final cellSubject = _board[position.y][position.x];
+
+    _previousStates.addLast(unwrapCells(_board));
+
+    if (cellSubject.value.value == value) {
+      value = 0;
+    }
+
+    cellSubject.add(Cell.normal(position, value));
+    _undoSubject.add(true);
+
+    _removeTipsInRow(position, value);
+    _removeTipsInColumn(position, value);
+
+    if (isValid(unwrapCells(_board), false)) {
+      io.deleteIfExists();
+
+      _gameStateSubject.add(GameEnded(_stopwatch.elapsed + _timeElapsed));
+    }
+  }
+
+  void updateCellWithTip(Vector2D position, int value) {
+    final cellSubject = _board[position.y][position.x];
+    final cell = cellSubject.value;
+
+    cellSubject.add(_updateCellWithTip(cell, value));
+  }
+
+  void undo() {
+    final previousState = _previousStates.removeLast();
+
+    for (int y = 0; y < boardSize; y++) {
+      for (int x = 0; x < boardSize; x++) {
+        final cellSubject = _board[y][x];
+        final previousCellState = previousState[y][x];
+
+        if (cellSubject.value != previousCellState) {
+          _board[y][x].add(previousCellState);
+        }
+      }
+    }
+
+    if (_undoSubject.value != _previousStates.isNotEmpty) {
+      _undoSubject.add(_previousStates.isNotEmpty);
+    }
   }
 
   void reset() {
@@ -58,38 +121,16 @@ class SudokuBloc {
         board: unwrapCells(_board), timeElapsed: _timeElapsed + _stopwatch.elapsed);
   }
 
-  Stream<Duration> get currentTime => Stream<Duration>.periodic(
-      Duration(milliseconds: 500),
-      (index) => GameState is GameRunning ? _timeElapsed + _stopwatch.elapsed : null);
-
-  Stream<Cell> cell(Vector2D position) => _board[position.y][position.x].stream;
-
-  Stream<GameState> get gameState => _gameStateSubject.stream;
-
-  void updateCellWithValue(Vector2D position, int value) {
-    final cellSubject = _board[position.y][position.x];
-
-    if (cellSubject.value.value == value) {
-      value = 0;
+  void dispose() {
+    if (!(_gameStateSubject.value is GameEnded)) {
+      io.save(takeSnapshot());
     }
 
-    cellSubject.add(Cell.normal(position, value));
-
-    _removeTipsInRow(position, value);
-    _removeTipsInColumn(position, value);
-
-    if (isValid(unwrapCells(_board), false)) {
-      io.deleteIfExists();
-
-      _gameStateSubject.add(GameEnded(_stopwatch.elapsed + _timeElapsed));
-    }
-  }
-
-  void updateCellWithTip(Vector2D position, int value) {
-    final cellSubject = _board[position.y][position.x];
-    final cell = cellSubject.value;
-
-    cellSubject.add(_updateCellWithTip(cell, value));
+    _stopwatch.stop();
+    _stopwatch.reset();
+    _gameStateSubject.close();
+    _undoSubject.close();
+    _board.forEach((row) => row.forEach((cell) => cell.close()));
   }
 
   Cell _updateCellWithTip(Cell cell, int value) {
@@ -102,19 +143,8 @@ class SudokuBloc {
         : Cell.withTips(cell.position, newTips);
   }
 
-  void dispose() {
-    if (!(_gameStateSubject.value is GameEnded)) {
-      io.save(takeSnapshot());
-    }
-
-    _stopwatch.stop();
-    _stopwatch.reset();
-    _gameStateSubject.close();
-    _board.forEach((row) => row.forEach((cell) => cell.close()));
-  }
-
   _removeTipsInRow(Vector2D position, int valueToRemove) {
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < boardSize; i++) {
       final cellSubject = _board[position.y][i];
       final cell = cellSubject.value;
 
@@ -125,7 +155,7 @@ class SudokuBloc {
   }
 
   _removeTipsInColumn(Vector2D position, int valueToRemove) {
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < boardSize; i++) {
       final cellSubject = _board[i][position.x];
       final cell = cellSubject.value;
 

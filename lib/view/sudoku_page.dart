@@ -49,12 +49,18 @@ class _SudokuPageState extends State<SudokuPage> {
         : screenSize.height * 0.7;
   }
 
+  Axis getAxisBasedOnWindowSize(Size screenSize) {
+    return screenSize.width > screenSize.height ? Axis.horizontal : Axis.vertical;
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final boardSize = _determineBoardWidth(size);
 
     final cellSize = boardSize / 9;
+
+    Axis currentAxis = getAxisBasedOnWindowSize(size);
 
     return StreamBuilder<GameState>(
         stream: bloc.gameState,
@@ -84,8 +90,12 @@ class _SudokuPageState extends State<SudokuPage> {
                       MaterialPageRoute(builder: (_) => SelectionPage()))),
             ),
             backgroundColor: backgroundColor,
-            body: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+            body: Flex(
+              mainAxisAlignment: currentAxis == Axis.vertical
+                  ? MainAxisAlignment.spaceAround
+                  : MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              direction: currentAxis,
               children: [
                 Container(
                   width: boardSize,
@@ -104,7 +114,9 @@ class _SudokuPageState extends State<SudokuPage> {
                                     padding: EdgeInsets.only(
                                         left: 2, right: 2, top: 2, bottom: 2),
                                     isHighlighted: (cell) =>
-                                        (!cell.isEmpty && cell.value == selectedNumber) || (cell.hasTips && cell.tips.contains(selectedNumber)),
+                                        (!cell.isEmpty && cell.value == selectedNumber) ||
+                                        (cell.hasTips &&
+                                            cell.tips.contains(selectedNumber)),
                                     size: cellSize,
                                     stream: bloc.cell(Vector2D(x, y)),
                                     onTap: (cell) {
@@ -126,43 +138,53 @@ class _SudokuPageState extends State<SudokuPage> {
                     ],
                   ),
                 ),
-                SudokuKeyboard(
-                  onNumberSelect: (number) => setState(() => selectedNumber = number),
-                ),
-                Row(
+                if (currentAxis == Axis.horizontal) SizedBox(width: 128),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    IconButton(
-                      padding: EdgeInsets.symmetric(horizontal: 32),
-                      icon: Icon(
-                        Icons.edit,
-                        color: tipMode
-                            ? Theme.of(context).highlightColor
-                            : Theme.of(context).disabledColor,
-                      ),
-                      onPressed: () => setState(() => tipMode = !tipMode),
+                    SudokuKeyboard(
+                      onNumberSelect: (number) => setState(() => selectedNumber = number),
                     ),
-                    IconButton(
-                      padding: EdgeInsets.symmetric(horizontal: 32),
-                      onPressed: null,
-                      icon: Icon(Icons.undo),
-                    ),
-                    IconButton(
-                      padding: EdgeInsets.symmetric(horizontal: 32),
-                      onPressed: null,
-                      icon: Icon(Icons.redo),
-                    ),
-                    IconButton(
-                      padding: EdgeInsets.symmetric(horizontal: 32),
-                      onPressed: () => showDialog<void>(
-                        context: context,
-                        barrierDismissible: true,
-                        builder: (context) => SudokuDialog.confirmationDialog(context,
-                            text: "Are you sure that you want to restart the game?",
-                            onConfirm: () => bloc.reset()),
-                      ),
-                      icon: Icon(Icons.refresh),
-                    ),
+                    if (currentAxis == Axis.horizontal) SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          padding: EdgeInsets.symmetric(horizontal: 32),
+                          color: tipMode
+                              ? Theme.of(context).highlightColor
+                              : Theme.of(context).disabledColor,
+                          icon: Icon(
+                            Icons.edit,
+                          ),
+                          onPressed: () => setState(() => tipMode = !tipMode),
+                        ),
+                        StreamBuilder<bool>(
+                          stream: bloc.isAbleToUndo,
+                          builder: (context, snapshot) {
+                            return IconButton(
+                              padding: EdgeInsets.symmetric(horizontal: 32),
+                              onPressed: snapshot.hasData && snapshot.data
+                                  ? () => bloc.undo()
+                                  : null,
+                              icon: Icon(Icons.undo),
+                            );
+                          },
+                        ),
+                        IconButton(
+                          padding: EdgeInsets.symmetric(horizontal: 32),
+                          onPressed: () => showDialog<void>(
+                            context: context,
+                            barrierDismissible: true,
+                            builder: (context) => SudokuDialog.confirmationDialog(context,
+                                text: "Are you sure that you want to restart the game?",
+                                onConfirm: () => bloc.reset()),
+                          ),
+                          icon: Icon(Icons.refresh),
+                        ),
+                      ],
+                    )
                   ],
                 )
               ],

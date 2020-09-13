@@ -6,12 +6,13 @@ Game is tested for android and web, but should work aswell on IOS, i've tried to
 ## TODO
 
 - Tips ✅
-- Undo/Red
+- Undo ✅
+- Responsive layout, for web, phones and tablets ✅
 - Runtime changeable themes using Provider
 - Animations
 - I18n
 - Tests
-- Make keyboard work on web (works currently only on Android, on IOS should too but I didn't test it)
+- Make keyboard work on web (works currently only on Android, on IOS should too but I'm not able to test It)
 
 ## Screenshots
 

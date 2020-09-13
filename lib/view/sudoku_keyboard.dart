@@ -13,21 +13,13 @@ class SudokuKeyboard extends StatefulWidget {
 }
 
 class _SudokuKeyboardState extends State<SudokuKeyboard> {
-  FocusNode focusNode;
+  final FocusNode _focusNode = FocusNode();
   int selectedNumber;
 
   @override
-  void initState() {
-    super.initState();
-    focusNode = FocusNode();
-    focusNode.requestFocus();
-  }
-
-  @override
   void dispose() {
+    _focusNode?.dispose();
     super.dispose();
-
-    focusNode?.dispose();
   }
 
   @override
@@ -35,13 +27,15 @@ class _SudokuKeyboardState extends State<SudokuKeyboard> {
     return RawKeyboardListener(
       autofocus: false,
       onKey: (key) {
+        print("XD" + key.character);
+
         final number = int.tryParse(key.character);
 
         if (number != null) {
           selectNumber(number);
         }
       },
-      focusNode: focusNode,
+      focusNode: _focusNode,
       child: Column(
         children: [
           Row(
