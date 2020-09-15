@@ -66,7 +66,7 @@ List<int> _getArrayInRange(int min, int max) {
   return List.generate((max - min + 1).abs(), (index) => index + min);
 }
 
-void _drawBoard(List<List<Cell>> board) {
+void _debugDraw(List<List<Cell>> board) {
   var printedBoard = "";
   board.forEach((row) => printedBoard +=
       "[${row.map((cell) => cell != null ? cell.value : 'n').join(", ")}]\n");

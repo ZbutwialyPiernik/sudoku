@@ -4,7 +4,7 @@ import 'dart:html' as dartHTML;
 import 'package:sudoku/model/io/sudoku_io.dart';
 import 'package:sudoku/model/sudoku_snapshot.dart';
 
-const key = "save";
+const key = "board";
 
 class WebSudokuIO extends SudokuIO {
   Future<void> deleteIfExists() async {

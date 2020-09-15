@@ -3,7 +3,6 @@ import 'package:sudoku/model/cell.dart';
 import 'package:sudoku/view/cell_widget.dart';
 import 'package:sudoku/model/sudoku_bloc.dart';
 import 'package:sudoku/model/sudoku_snapshot.dart';
-import 'package:sudoku/view/selection_page.dart';
 import 'package:sudoku/view/sudoku_dialog.dart';
 import 'package:sudoku/view/sudoku_keyboard.dart';
 
@@ -85,9 +84,7 @@ class _SudokuPageState extends State<SudokuPage> {
                               .copyWith(fontWeight: FontWeight.w400))
                       : Container()),
               centerTitle: true,
-              leading: BackButton(
-                  onPressed: () => Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => SelectionPage()))),
+              leading: BackButton(),
             ),
             backgroundColor: backgroundColor,
             body: Flex(
@@ -197,21 +194,23 @@ class _SudokuPageState extends State<SudokuPage> {
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) => SudokuDialog.showDialog(context,
-          text:
-              "Congratulations, you finished game in ${durationToString(gameEnded.gameTime)}",
-          actions: [
-            RaisedButton(
-              onPressed: () {
-                final navigator = Navigator.of(context);
+      builder: (BuildContext context) => SudokuDialog.showDialog(
+        context,
+        text:
+            "Congratulations, you finished game in ${durationToString(gameEnded.gameTime)}",
+        actions: [
+          RaisedButton(
+            onPressed: () {
+              final navigator = Navigator.of(context);
 
-                navigator..pop()..pop();
-              },
-              color: darkerTileColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Text("Continue"),
-            ),
-          ]),
+              navigator..pop()..pop();
+            },
+            color: darkerTileColor,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Text("Continue"),
+          ),
+        ],
+      ),
     );
   }
 

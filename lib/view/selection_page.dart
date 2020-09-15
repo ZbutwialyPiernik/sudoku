@@ -8,7 +8,12 @@ import 'package:sudoku/view/sudoku_dialog.dart';
 
 import 'package:sudoku/view/sudoku_page.dart';
 
-class SelectionPage extends StatelessWidget {
+class SelectionPage extends StatefulWidget {
+  @override
+  _SelectionPageState createState() => _SelectionPageState();
+}
+
+class _SelectionPageState extends State<SelectionPage> {
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -89,9 +94,12 @@ class SelectionPage extends StatelessWidget {
     final navigator = Navigator.of(context);
 
     if (pop) navigator.pop();
-    navigator.push(MaterialPageRoute(
-      builder: (_) => SudokuPage(snapshot: snapshot),
-    ));
+    navigator
+        .push(MaterialPageRoute(
+          builder: (_) => SudokuPage(snapshot: snapshot),
+        ))
+        .then((value) =>
+            WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {})));
   }
 
   Widget _buildButton(BuildContext context,

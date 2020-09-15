@@ -57,16 +57,15 @@ class SudokuBloc {
   }
 
   void updateCellWithValue(Vector2D position, int value) {
-    final cellSubject = _board[position.y][position.x];
+    _savePreviousState();
 
-    _previousStates.addLast(unwrapCells(_board));
+    final cellSubject = _board[position.y][position.x];
 
     if (cellSubject.value.value == value) {
       value = 0;
     }
 
     cellSubject.add(Cell.normal(position, value));
-    _undoSubject.add(true);
 
     _removeTipsInRow(position, value);
     _removeTipsInColumn(position, value);
@@ -79,6 +78,8 @@ class SudokuBloc {
   }
 
   void updateCellWithTip(Vector2D position, int value) {
+    _savePreviousState();
+
     final cellSubject = _board[position.y][position.x];
     final cell = cellSubject.value;
 
@@ -116,14 +117,9 @@ class SudokuBloc {
     _timeElapsed = Duration.zero;
   }
 
-  SudokuSnapshot takeSnapshot() {
-    return SudokuSnapshot(
-        board: unwrapCells(_board), timeElapsed: _timeElapsed + _stopwatch.elapsed);
-  }
-
   void dispose() {
     if (!(_gameStateSubject.value is GameEnded)) {
-      io.save(takeSnapshot());
+      io.save(_takeSnapshot());
     }
 
     _stopwatch.stop();
@@ -131,6 +127,16 @@ class SudokuBloc {
     _gameStateSubject.close();
     _undoSubject.close();
     _board.forEach((row) => row.forEach((cell) => cell.close()));
+  }
+
+  SudokuSnapshot _takeSnapshot() {
+    return SudokuSnapshot(
+        board: unwrapCells(_board), timeElapsed: _timeElapsed + _stopwatch.elapsed);
+  }
+
+  _savePreviousState() {
+    _previousStates.addLast(unwrapCells(_board));
+    if (_undoSubject.value != true) _undoSubject.add(true);
   }
 
   Cell _updateCellWithTip(Cell cell, int value) {
