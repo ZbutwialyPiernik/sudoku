@@ -73,7 +73,8 @@ class _SudokuPageState extends State<SudokuPage> {
         return Scaffold(
           appBar: AppBar(
             brightness: Theme.of(context).brightness,
-            backgroundColor: darkerTileColor,
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
             title: currentAxis == Axis.vertical ? _buildTimer(null) : null,
             centerTitle: true,
             leading: BackButton(),
