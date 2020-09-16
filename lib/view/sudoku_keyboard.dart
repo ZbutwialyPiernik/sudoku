@@ -27,8 +27,6 @@ class _SudokuKeyboardState extends State<SudokuKeyboard> {
     return RawKeyboardListener(
       autofocus: false,
       onKey: (key) {
-        print("XD" + key.character);
-
         final number = int.tryParse(key.character);
 
         if (number != null) {

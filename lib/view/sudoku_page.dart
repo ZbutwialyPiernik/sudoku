@@ -62,132 +62,136 @@ class _SudokuPageState extends State<SudokuPage> {
     Axis currentAxis = getAxisBasedOnWindowSize(size);
 
     return StreamBuilder<GameState>(
-        stream: bloc.gameState,
-        builder: (context, snapshot) {
-          if (snapshot.hasData && snapshot.data is GameEnded) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _showGameFinishedDialog(context, snapshot.data);
-            });
-          }
+      stream: bloc.gameState,
+      builder: (context, snapshot) {
+        if (snapshot.hasData && snapshot.data is GameEnded) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _showGameFinishedDialog(context, snapshot.data);
+          });
+        }
 
-          return Scaffold(
-            appBar: AppBar(
-              brightness: Theme.of(context).brightness,
-              backgroundColor: darkerTileColor,
-              title: StreamBuilder<Duration>(
-                  stream: bloc.currentTime,
-                  builder: (context, snapshot) => snapshot.hasData
-                      ? Text(durationToString(snapshot.data),
-                          style: Theme.of(context)
-                              .textTheme
-                              .headline6
-                              .copyWith(fontWeight: FontWeight.w400))
-                      : Container()),
-              centerTitle: true,
-              leading: BackButton(),
+        return Scaffold(
+          appBar: AppBar(
+            brightness: Theme.of(context).brightness,
+            backgroundColor: darkerTileColor,
+            title: StreamBuilder<Duration>(
+              stream: bloc.currentTime,
+              builder: (context, snapshot) => Text(
+                snapshot.hasData ? durationToString(snapshot.data) : "0:00",
+                style: Theme.of(context)
+                    .textTheme
+                    .headline6
+                    .copyWith(fontWeight: FontWeight.w400),
+              ),
             ),
-            backgroundColor: backgroundColor,
-            body: Flex(
-              mainAxisAlignment: currentAxis == Axis.vertical
-                  ? MainAxisAlignment.spaceAround
-                  : MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              direction: currentAxis,
-              children: [
-                Container(
-                  width: boardSize,
-                  height: boardSize,
-                  child: Stack(
-                    children: [
-                      Column(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          for (var y = 0; y < 9; y++)
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                for (var x = 0; x < 9; x++)
-                                  CellWidget(
-                                    padding: EdgeInsets.only(
-                                        left: 2, right: 2, top: 2, bottom: 2),
-                                    isHighlighted: (cell) =>
-                                        (!cell.isEmpty && cell.value == selectedNumber) ||
-                                        (cell.hasTips &&
-                                            cell.tips.contains(selectedNumber)),
-                                    size: cellSize,
-                                    stream: bloc.cell(Vector2D(x, y)),
-                                    onTap: (cell) {
-                                      if (selectedNumber != null && !cell.isSolid) {
-                                        if (tipMode) {
-                                          bloc.updateCellWithTip(
-                                              Vector2D(x, y), selectedNumber);
-                                        } else {
-                                          bloc.updateCellWithValue(
-                                              Vector2D(x, y), selectedNumber);
-                                        }
-                                      }
-                                    },
-                                  )
-                              ],
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                if (currentAxis == Axis.horizontal) SizedBox(width: 128),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
+            centerTitle: true,
+            leading: BackButton(),
+          ),
+          backgroundColor: backgroundColor,
+          body: Flex(
+            mainAxisAlignment: currentAxis == Axis.vertical
+                ? MainAxisAlignment.spaceAround
+                : MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            direction: currentAxis,
+            children: [
+              _buildBoard(boardSize, cellSize),
+              if (currentAxis == Axis.horizontal) SizedBox(width: 128),
+              _buildButtons(currentAxis),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBoard(double boardSize, double cellSize) {
+    return Container(
+      width: boardSize,
+      height: boardSize,
+      child: Stack(
+        children: [
+          Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              for (var y = 0; y < 9; y++)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    SudokuKeyboard(
-                      onNumberSelect: (number) => setState(() => selectedNumber = number),
-                    ),
-                    if (currentAxis == Axis.horizontal) SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          padding: EdgeInsets.symmetric(horizontal: 32),
-                          color: tipMode
-                              ? Theme.of(context).highlightColor
-                              : Theme.of(context).disabledColor,
-                          icon: Icon(
-                            Icons.edit,
-                          ),
-                          onPressed: () => setState(() => tipMode = !tipMode),
-                        ),
-                        StreamBuilder<bool>(
-                          stream: bloc.isAbleToUndo,
-                          builder: (context, snapshot) {
-                            return IconButton(
-                              padding: EdgeInsets.symmetric(horizontal: 32),
-                              onPressed: snapshot.hasData && snapshot.data
-                                  ? () => bloc.undo()
-                                  : null,
-                              icon: Icon(Icons.undo),
-                            );
-                          },
-                        ),
-                        IconButton(
-                          padding: EdgeInsets.symmetric(horizontal: 32),
-                          onPressed: () => showDialog<void>(
-                            context: context,
-                            barrierDismissible: true,
-                            builder: (context) => SudokuDialog.confirmationDialog(context,
-                                text: "Are you sure that you want to restart the game?",
-                                onConfirm: () => bloc.reset()),
-                          ),
-                          icon: Icon(Icons.refresh),
-                        ),
-                      ],
-                    )
+                    for (var x = 0; x < 9; x++)
+                      CellWidget(
+                        padding: EdgeInsets.only(left: 2, right: 2, top: 2, bottom: 2),
+                        isHighlighted: (cell) =>
+                            (!cell.isEmpty && cell.value == selectedNumber) ||
+                            (cell.hasTips && cell.tips.contains(selectedNumber)),
+                        size: cellSize,
+                        stream: bloc.cell(Vector2D(x, y)),
+                        onTap: (cell) {
+                          if (selectedNumber != null && !cell.isSolid) {
+                            if (tipMode) {
+                              bloc.updateCellWithTip(Vector2D(x, y), selectedNumber);
+                            } else {
+                              bloc.updateCellWithValue(Vector2D(x, y), selectedNumber);
+                            }
+                          }
+                        },
+                      )
                   ],
-                )
-              ],
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildButtons(Axis currentAxis) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SudokuKeyboard(
+          onNumberSelect: (number) => setState(() => selectedNumber = number),
+        ),
+        if (currentAxis == Axis.horizontal) SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              padding: EdgeInsets.symmetric(horizontal: 32),
+              color: tipMode
+                  ? Theme.of(context).highlightColor
+                  : Theme.of(context).disabledColor,
+              icon: Icon(
+                Icons.edit,
+              ),
+              onPressed: () => setState(() => tipMode = !tipMode),
             ),
-          );
-        });
+            StreamBuilder<bool>(
+              stream: bloc.isAbleToUndo,
+              builder: (context, snapshot) {
+                return IconButton(
+                  padding: EdgeInsets.symmetric(horizontal: 32),
+                  onPressed: snapshot.hasData && snapshot.data ? () => bloc.undo() : null,
+                  icon: Icon(Icons.undo),
+                );
+              },
+            ),
+            IconButton(
+              padding: EdgeInsets.symmetric(horizontal: 32),
+              onPressed: () => showDialog<void>(
+                context: context,
+                barrierDismissible: true,
+                builder: (context) => SudokuDialog.confirmationDialog(context,
+                    text: "Are you sure that you want to restart the game?",
+                    onConfirm: () => bloc.reset()),
+              ),
+              icon: Icon(Icons.refresh),
+            ),
+          ],
+        )
+      ],
+    );
   }
 
   Future<void> _showGameFinishedDialog(BuildContext context, GameEnded gameEnded) async {

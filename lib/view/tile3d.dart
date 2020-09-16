@@ -8,12 +8,13 @@ class Tile3dStyle {
   final BorderRadius borderRadius;
   final double z;
   final double tappedZ;
-  const Tile3dStyle(
-      {this.topColor = const Color(0xFF45484c),
-      this.backColor = const Color(0xFF191a1c),
-      this.borderRadius = const BorderRadius.all(Radius.circular(2.0)),
-      this.z = 3.0,
-      this.tappedZ = 3.0});
+  const Tile3dStyle({
+    this.topColor = const Color(0xFF45484c),
+    this.backColor = const Color(0xFF191a1c),
+    this.borderRadius = const BorderRadius.all(Radius.circular(2.0)),
+    this.z = 3.0,
+    this.tappedZ = 3.0,
+  });
 }
 
 class Tile3d extends StatefulWidget {
@@ -23,12 +24,13 @@ class Tile3d extends StatefulWidget {
   final double width;
   final double height;
 
-  Tile3d(
-      {@required this.onPressed,
-      @required this.child,
-      this.style = const Tile3dStyle(),
-      this.width = 100.0,
-      this.height = 90.0});
+  Tile3d({
+    @required this.onPressed,
+    @required this.child,
+    this.style = const Tile3dStyle(),
+    this.width = 100.0,
+    this.height = 90.0,
+  });
 
   @override
   State<StatefulWidget> createState() => Tile3dState();

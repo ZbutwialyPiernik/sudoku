@@ -33,7 +33,9 @@ class SudokuBloc {
 
   Stream<Duration> get currentTime => Stream<Duration>.periodic(
       Duration(milliseconds: 500),
-      (index) => GameState is GameRunning ? _timeElapsed + _stopwatch.elapsed : null);
+      (index) => _gameStateSubject.value is GameRunning
+          ? _timeElapsed + _stopwatch.elapsed
+          : null);
 
   Stream<Cell> cell(Vector2D position) => _board[position.y][position.x].stream;
 
