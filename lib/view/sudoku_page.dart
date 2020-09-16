@@ -74,16 +74,7 @@ class _SudokuPageState extends State<SudokuPage> {
           appBar: AppBar(
             brightness: Theme.of(context).brightness,
             backgroundColor: darkerTileColor,
-            title: StreamBuilder<Duration>(
-              stream: bloc.currentTime,
-              builder: (context, snapshot) => Text(
-                snapshot.hasData ? durationToString(snapshot.data) : "0:00",
-                style: Theme.of(context)
-                    .textTheme
-                    .headline6
-                    .copyWith(fontWeight: FontWeight.w400),
-              ),
-            ),
+            title: currentAxis == Axis.vertical ? _buildTimer(null) : null,
             centerTitle: true,
             leading: BackButton(),
           ),
@@ -102,6 +93,19 @@ class _SudokuPageState extends State<SudokuPage> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildTimer(double fontSize) {
+    return StreamBuilder<Duration>(
+      stream: bloc.currentTime,
+      builder: (context, snapshot) => Text(
+        snapshot.hasData ? durationToString(snapshot.data) : "0:00",
+        style: Theme.of(context)
+            .textTheme
+            .headline6
+            .copyWith(fontWeight: FontWeight.w400, fontSize: fontSize),
+      ),
     );
   }
 
@@ -150,6 +154,8 @@ class _SudokuPageState extends State<SudokuPage> {
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        if (currentAxis == Axis.horizontal) _buildTimer(64),
+        if (currentAxis == Axis.horizontal) SizedBox(height: 64),
         SudokuKeyboard(
           onNumberSelect: (number) => setState(() => selectedNumber = number),
         ),
