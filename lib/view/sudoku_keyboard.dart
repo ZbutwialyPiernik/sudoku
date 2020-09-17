@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sudoku/view/color_util.dart';
 import 'package:sudoku/view/sudoku_page.dart';
 import 'package:sudoku/view/tile3d.dart';
@@ -34,6 +35,10 @@ class _SudokuKeyboardState extends State<SudokuKeyboard> {
       focusNode: _focusNode,
       autofocus: false,
       onKey: (key) {
+        if (key is RawKeyUpEvent) {
+          return;
+        }
+
         final number = int.tryParse(key.data.keyLabel);
 
         if (number != null) {
@@ -59,7 +64,7 @@ class _SudokuKeyboardState extends State<SudokuKeyboard> {
   }
 
   void selectNumber(int value) {
-    setState(() => selectedNumber = value);
+    setState(() => selectedNumber = selectedNumber == value ? null : value);
     widget.onNumberSelect(value);
   }
 
@@ -78,13 +83,7 @@ class _SudokuKeyboardState extends State<SudokuKeyboard> {
           topColor: backgroundColor,
           backColor: darken(backgroundColor, 0.2),
         ),
-        onPressed: () {
-          if (selectedNumber == value) {
-            selectNumber(null);
-          } else {
-            selectNumber(value);
-          }
-        },
+        onPressed: () => selectNumber(value),
         child: Center(
           child: Text(
             text,
