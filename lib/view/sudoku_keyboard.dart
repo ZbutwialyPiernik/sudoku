@@ -17,6 +17,12 @@ class _SudokuKeyboardState extends State<SudokuKeyboard> {
   int selectedNumber;
 
   @override
+  void initState() {
+    super.initState();
+    _focusNode.requestFocus();
+  }
+
+  @override
   void dispose() {
     _focusNode?.dispose();
     super.dispose();
@@ -25,15 +31,15 @@ class _SudokuKeyboardState extends State<SudokuKeyboard> {
   @override
   Widget build(BuildContext context) {
     return RawKeyboardListener(
+      focusNode: _focusNode,
       autofocus: false,
       onKey: (key) {
-        final number = int.tryParse(key.character);
+        final number = int.tryParse(key.data.keyLabel);
 
         if (number != null) {
           selectNumber(number);
         }
       },
-      focusNode: _focusNode,
       child: Column(
         children: [
           Row(

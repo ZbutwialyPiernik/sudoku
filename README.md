@@ -8,12 +8,8 @@ Game is tested for android and web, but should work aswell on IOS, i've tried to
 - Tips ✅
 - Undo ✅
 - Responsive layout, for web, phones and tablets ✅
-- Runtime changeable themes using Provider
-- Animations
-- I18n
-- Tests
 - Save board on page refresh on web
-- Make keyboard work on web (works currently only on Android, on IOS should too but I'm not able to test It)
+- Make keyboard work on web (works currently only on Android, on IOS should too but I'm not able to test It) ✅
 
 ## Screenshots
 
